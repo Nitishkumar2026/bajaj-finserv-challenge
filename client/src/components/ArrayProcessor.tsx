@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { arrayInputSchema, type ArrayResponse } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type FormData = {
   input: string;
@@ -38,10 +38,6 @@ export default function ArrayProcessor() {
     },
     onSuccess: (data: ArrayResponse) => {
       setResponse(data);
-      toast({
-        title: "Success",
-        description: "Array processed successfully",
-      });
     },
     onError: (error) => {
       toast({
@@ -60,7 +56,7 @@ export default function ArrayProcessor() {
       if (!success) {
         toast({
           title: "Error",
-          description: 'Invalid JSON format. Expected format: { "data": ["M","1","334","4","B"] }',
+          description: "Expected array, received string",
           variant: "destructive",
         });
         return;
@@ -76,99 +72,80 @@ export default function ArrayProcessor() {
     }
   };
 
-  const getFilteredResponse = () => {
-    if (!response) return null;
-
-    const filteredData: Record<string, any> = {};
-
-    if (selectedFilters.includes("numbers")) {
-      filteredData.numbers = response.numbers;
-    }
-    if (selectedFilters.includes("alphabets")) {
-      filteredData.alphabets = response.alphabets;
-    }
-    if (selectedFilters.includes("highest")) {
-      filteredData.highest_alphabet = response.highest_alphabet;
-    }
-
-    return filteredData;
-  };
-
   return (
     <div className="space-y-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="input"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder='{ "data": ["M","1","334","4","B"] }'
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={processMutation.isPending}
-          >
-            Submit
-          </Button>
-        </form>
-      </Form>
+      {/* API Input Section */}
+      <div className="space-y-2">
+        <div className="text-sm text-muted-foreground">API Input</div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="input"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Input
+                      className="font-mono text-sm"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700"
+              disabled={processMutation.isPending}
+            >
+              Submit
+            </Button>
+          </form>
+        </Form>
+      </div>
 
       {response && (
-        <div className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={selectedFilters.includes("numbers") ? "default" : "outline"}
-              onClick={() => setSelectedFilters(prev => 
-                prev.includes("numbers") 
-                  ? prev.filter(f => f !== "numbers")
-                  : [...prev, "numbers"]
-              )}
+        <>
+          {/* Multi Filter Section */}
+          <div className="space-y-2">
+            <div className="text-sm text-muted-foreground">Multi Filter</div>
+            <Select
+              value={selectedFilters.join(",")}
+              onValueChange={(value) => {
+                setSelectedFilters(value === "" ? [] : value.split(","));
+              }}
             >
-              Numbers
-            </Button>
-            <Button
-              variant={selectedFilters.includes("alphabets") ? "default" : "outline"}
-              onClick={() => setSelectedFilters(prev => 
-                prev.includes("alphabets") 
-                  ? prev.filter(f => f !== "alphabets")
-                  : [...prev, "alphabets"]
-              )}
-            >
-              Alphabets
-            </Button>
-            <Button
-              variant={selectedFilters.includes("highest") ? "default" : "outline"}
-              onClick={() => setSelectedFilters(prev => 
-                prev.includes("highest") 
-                  ? prev.filter(f => f !== "highest")
-                  : [...prev, "highest"]
-              )}
-            >
-              Highest Alphabet
-            </Button>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select options..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="numbers">Numbers</SelectItem>
+                <SelectItem value="alphabets">Alphabets</SelectItem>
+                <SelectItem value="highest">Highest Alphabet</SelectItem>
+                <SelectItem value="numbers,highest">Numbers & Highest Alphabet</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
+          {/* Filtered Response Section */}
           {selectedFilters.length > 0 && (
-            <div className="rounded-lg bg-muted p-4">
-              <div className="font-medium mb-2">Filtered Response</div>
-              {Object.entries(getFilteredResponse() || {}).map(([key, value]) => (
-                <div key={key} className="mb-1">
-                  {key}: {Array.isArray(value) ? value.join(", ") : value}
-                </div>
-              ))}
+            <div className="space-y-2">
+              <div className="text-sm text-muted-foreground">Filtered Response</div>
+              <div className="space-y-1">
+                {selectedFilters.includes("numbers") && (
+                  <div>Numbers: {response.numbers.join(",")}</div>
+                )}
+                {selectedFilters.includes("alphabets") && (
+                  <div>Alphabets: {response.alphabets.join(",")}</div>
+                )}
+                {selectedFilters.includes("highest") && (
+                  <div>Highest Alphabet: {response.highest_alphabet}</div>
+                )}
+              </div>
             </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );
