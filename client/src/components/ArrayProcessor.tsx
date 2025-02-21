@@ -15,8 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Command, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type FormData = {
   input: string;
@@ -26,7 +24,6 @@ export default function ArrayProcessor() {
   const { toast } = useToast();
   const [response, setResponse] = useState<ArrayResponse | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
-  const [open, setOpen] = useState(false);
 
   const form = useForm<FormData>({
     defaultValues: {
@@ -121,72 +118,35 @@ export default function ArrayProcessor() {
           {/* Multi Filter Section */}
           <div className="space-y-2">
             <div className="text-sm text-muted-foreground">Multi Filter</div>
-            <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={open}
-                  className="w-full justify-between"
-                >
-                  {selectedFilters.length > 0 
-                    ? `${selectedFilters.length} selected`
-                    : "Select options..."}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandGroup>
-                    <CommandItem onSelect={() => toggleFilter("numbers")}>
-                      <div className="flex items-center">
-                        <span>Numbers</span>
-                        {selectedFilters.includes("numbers") && (
-                          <span className="ml-auto">✓</span>
-                        )}
-                      </div>
-                    </CommandItem>
-                    <CommandItem onSelect={() => toggleFilter("alphabets")}>
-                      <div className="flex items-center">
-                        <span>Alphabets</span>
-                        {selectedFilters.includes("alphabets") && (
-                          <span className="ml-auto">✓</span>
-                        )}
-                      </div>
-                    </CommandItem>
-                    <CommandItem onSelect={() => toggleFilter("highest")}>
-                      <div className="flex items-center">
-                        <span>Highest Alphabet</span>
-                        {selectedFilters.includes("highest") && (
-                          <span className="ml-auto">✓</span>
-                        )}
-                      </div>
-                    </CommandItem>
-                  </CommandGroup>
-                </Command>
-              </PopoverContent>
-            </Popover>
-
-            {/* Selected Filters */}
-            {selectedFilters.length > 0 && (
+            <div className="relative">
+              <select
+                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                multiple={false}
+                onChange={(e) => toggleFilter(e.target.value)}
+                value=""
+              >
+                <option value="" disabled>Select options...</option>
+                <option value="numbers">Numbers</option>
+                <option value="alphabets">Alphabets</option>
+                <option value="highest">Highest Alphabet</option>
+              </select>
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedFilters.map(filter => (
                   <div
                     key={filter}
-                    className="flex items-center gap-1 bg-blue-100 text-blue-800 px-2 py-1 rounded"
+                    className="inline-flex items-center gap-1 px-2 py-1 text-sm border rounded-md bg-gray-50"
                   >
-                    <span className="capitalize">
-                      {filter === "highest" ? "Highest Alphabet" : filter}
-                    </span>
+                    <span>{filter}</span>
                     <button
                       onClick={() => toggleFilter(filter)}
-                      className="text-blue-600 hover:text-blue-800"
+                      className="text-gray-500 hover:text-gray-700"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
           </div>
 
           {/* Filtered Response Section */}
