@@ -24,25 +24,23 @@ import {
 } from "@/components/ui/select";
 
 type FormData = {
-  data: string;
+  input: string;
 };
 
 export default function ArrayProcessor() {
   const { toast } = useToast();
   const [response, setResponse] = useState<ArrayResponse | null>(null);
-  const [filter, setFilter] = useState<string>("all");
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
 
   const form = useForm<FormData>({
-    resolver: zodResolver(
-      arrayInputSchema.transform((data) => ({
-        data: JSON.stringify(data.data),
-      }))
-    ),
+    defaultValues: {
+      input: '{ "data": ["1","2","a","b"] }',
+    },
   });
 
   const processMutation = useMutation({
-    mutationFn: async (data: string[]) => {
-      const res = await apiRequest("POST", "/api/bfhl", { data });
+    mutationFn: async (data: { data: string[] }) => {
+      const res = await apiRequest("POST", "/bfhl", data);
       return res.json();
     },
     onSuccess: (data: ArrayResponse) => {
@@ -63,15 +61,23 @@ export default function ArrayProcessor() {
 
   const onSubmit = (formData: FormData) => {
     try {
-      const array = JSON.parse(formData.data);
-      if (!Array.isArray(array)) {
-        throw new Error("Input must be an array");
+      const parsedInput = JSON.parse(formData.input);
+      const { success } = arrayInputSchema.safeParse(parsedInput);
+
+      if (!success) {
+        toast({
+          title: "Error",
+          description: "Invalid JSON format. Expected format: { \"data\": [\"1\",\"2\",\"a\",\"b\"] }",
+          variant: "destructive",
+        });
+        return;
       }
-      processMutation.mutate(array);
+
+      processMutation.mutate(parsedInput);
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid JSON array format",
+        description: "Invalid JSON format",
         variant: "destructive",
       });
     }
@@ -80,16 +86,32 @@ export default function ArrayProcessor() {
   const getFilteredResponse = () => {
     if (!response) return null;
 
-    switch (filter) {
-      case "numbers":
-        return { numbers: response.numbers };
-      case "alphabets":
-        return { alphabets: response.alphabets };
-      case "highest":
-        return { highest_alphabet: response.highest_alphabet };
-      default:
-        return response;
+    const filteredResponse: Partial<ArrayResponse> = {
+      is_success: response.is_success,
+      user_id: response.user_id,
+      email: response.email,
+      roll_number: response.roll_number,
+    };
+
+    if (selectedFilters.includes("numbers")) {
+      filteredResponse.numbers = response.numbers;
     }
+    if (selectedFilters.includes("alphabets")) {
+      filteredResponse.alphabets = response.alphabets;
+    }
+    if (selectedFilters.includes("highest")) {
+      filteredResponse.highest_alphabet = response.highest_alphabet;
+    }
+
+    return filteredResponse;
+  };
+
+  const toggleFilter = (value: string) => {
+    setSelectedFilters(prev => 
+      prev.includes(value) 
+        ? prev.filter(f => f !== value)
+        : [...prev, value]
+    );
   };
 
   return (
@@ -98,12 +120,12 @@ export default function ArrayProcessor() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
             control={form.control}
-            name="data"
+            name="input"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder='Enter JSON array (e.g. ["1","2","a","b"])'
+                    placeholder='{ "data": ["1","2","a","b"] }'
                     {...field}
                   />
                 </FormControl>
@@ -116,24 +138,33 @@ export default function ArrayProcessor() {
             className="w-full"
             disabled={processMutation.isPending}
           >
-            {processMutation.isPending ? "Processing..." : "Process Array"}
+            Process Array
           </Button>
         </form>
       </Form>
 
       {response && (
         <div className="space-y-4">
-          <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select filter" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="numbers">Numbers</SelectItem>
-              <SelectItem value="alphabets">Alphabets</SelectItem>
-              <SelectItem value="highest">Highest Alphabet</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant={selectedFilters.includes("numbers") ? "default" : "outline"}
+              onClick={() => toggleFilter("numbers")}
+            >
+              Numbers
+            </Button>
+            <Button
+              variant={selectedFilters.includes("alphabets") ? "default" : "outline"}
+              onClick={() => toggleFilter("alphabets")}
+            >
+              Alphabets
+            </Button>
+            <Button
+              variant={selectedFilters.includes("highest") ? "default" : "outline"}
+              onClick={() => toggleFilter("highest")}
+            >
+              Highest Alphabet
+            </Button>
+          </div>
 
           <div className="rounded-lg bg-muted p-4">
             <pre className="whitespace-pre-wrap break-words">

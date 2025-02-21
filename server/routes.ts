@@ -5,11 +5,11 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // POST /bfhl endpoint
-  app.post("/api/bfhl", async (req, res) => {
+  app.post("/bfhl", async (req, res) => {
     try {
       // Validate input
       const { data } = arrayInputSchema.parse(req.body);
-      
+
       // Process arrays
       const numbers = data.filter(item => !isNaN(Number(item)));
       const alphabets = data.filter(item => /^[A-Za-z]$/.test(item));
@@ -17,10 +17,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         alphabets.reduce((a, b) => a.toLowerCase() > b.toLowerCase() ? a : b) : 
         undefined;
 
+      // Return response in exact format as required
       res.json({
         is_success: true,
-        user_id: "john_doe_17091999",
-        email: "john@xyz.com",
+        user_id: "ABCD123_17091999", // Format: roll_number_ddmmyyyy
+        email: "abcd@xyz.com",
         roll_number: "ABCD123",
         numbers,
         alphabets,
@@ -42,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET /bfhl endpoint
-  app.get("/api/bfhl", (_req, res) => {
+  app.get("/bfhl", (_req, res) => {
     res.json({ operation_code: 1 });
   });
 

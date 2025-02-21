@@ -7,7 +7,7 @@ export const arrayInputSchema = z.object({
 
 export type ArrayInput = z.infer<typeof arrayInputSchema>;
 
-// Response schema
+// Response schema for POST /bfhl
 export const arrayResponseSchema = z.object({
   is_success: z.boolean(),
   user_id: z.string(),
@@ -20,6 +20,7 @@ export const arrayResponseSchema = z.object({
 
 export type ArrayResponse = z.infer<typeof arrayResponseSchema>;
 
+// Response schema for GET /bfhl
 export const operationResponseSchema = z.object({
   operation_code: z.number()
 });
