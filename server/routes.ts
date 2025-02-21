@@ -11,10 +11,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { data } = arrayInputSchema.parse(req.body);
 
       // Process arrays
-      const numbers = data.filter(item => !isNaN(Number(item)));
+      const numbers = data.filter(item => /^\d+$/.test(item));
       const alphabets = data.filter(item => /^[A-Za-z]$/.test(item));
+
+      // Find highest alphabet in A-Z series
       const highest_alphabet = alphabets.length > 0 ? 
-        alphabets.reduce((a, b) => a.toLowerCase() > b.toLowerCase() ? a : b) : 
+        alphabets.reduce((a, b) => a.toLowerCase() >= b.toLowerCase() ? a : b) : 
         undefined;
 
       // Return response in exact format as required
@@ -42,7 +44,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /bfhl endpoint
+  // GET /bfhl endpoint - returns operation_code: 1
   app.get("/bfhl", (_req, res) => {
     res.json({ operation_code: 1 });
   });

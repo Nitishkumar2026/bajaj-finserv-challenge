@@ -15,13 +15,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 type FormData = {
   input: string;
@@ -34,7 +27,7 @@ export default function ArrayProcessor() {
 
   const form = useForm<FormData>({
     defaultValues: {
-      input: '{ "data": ["1","2","a","b"] }',
+      input: '{ "data": ["M","1","334","4","B"] }',
     },
   });
 
@@ -67,7 +60,7 @@ export default function ArrayProcessor() {
       if (!success) {
         toast({
           title: "Error",
-          description: "Invalid JSON format. Expected format: { \"data\": [\"1\",\"2\",\"a\",\"b\"] }",
+          description: 'Invalid JSON format. Expected format: { "data": ["M","1","334","4","B"] }',
           variant: "destructive",
         });
         return;
@@ -86,32 +79,19 @@ export default function ArrayProcessor() {
   const getFilteredResponse = () => {
     if (!response) return null;
 
-    const filteredResponse: Partial<ArrayResponse> = {
-      is_success: response.is_success,
-      user_id: response.user_id,
-      email: response.email,
-      roll_number: response.roll_number,
-    };
+    const filteredData: Record<string, any> = {};
 
     if (selectedFilters.includes("numbers")) {
-      filteredResponse.numbers = response.numbers;
+      filteredData.numbers = response.numbers;
     }
     if (selectedFilters.includes("alphabets")) {
-      filteredResponse.alphabets = response.alphabets;
+      filteredData.alphabets = response.alphabets;
     }
     if (selectedFilters.includes("highest")) {
-      filteredResponse.highest_alphabet = response.highest_alphabet;
+      filteredData.highest_alphabet = response.highest_alphabet;
     }
 
-    return filteredResponse;
-  };
-
-  const toggleFilter = (value: string) => {
-    setSelectedFilters(prev => 
-      prev.includes(value) 
-        ? prev.filter(f => f !== value)
-        : [...prev, value]
-    );
+    return filteredData;
   };
 
   return (
@@ -125,7 +105,7 @@ export default function ArrayProcessor() {
               <FormItem>
                 <FormControl>
                   <Input
-                    placeholder='{ "data": ["1","2","a","b"] }'
+                    placeholder='{ "data": ["M","1","334","4","B"] }'
                     {...field}
                   />
                 </FormControl>
@@ -138,7 +118,7 @@ export default function ArrayProcessor() {
             className="w-full"
             disabled={processMutation.isPending}
           >
-            Process Array
+            Submit
           </Button>
         </form>
       </Form>
@@ -148,29 +128,46 @@ export default function ArrayProcessor() {
           <div className="flex gap-2 flex-wrap">
             <Button
               variant={selectedFilters.includes("numbers") ? "default" : "outline"}
-              onClick={() => toggleFilter("numbers")}
+              onClick={() => setSelectedFilters(prev => 
+                prev.includes("numbers") 
+                  ? prev.filter(f => f !== "numbers")
+                  : [...prev, "numbers"]
+              )}
             >
               Numbers
             </Button>
             <Button
               variant={selectedFilters.includes("alphabets") ? "default" : "outline"}
-              onClick={() => toggleFilter("alphabets")}
+              onClick={() => setSelectedFilters(prev => 
+                prev.includes("alphabets") 
+                  ? prev.filter(f => f !== "alphabets")
+                  : [...prev, "alphabets"]
+              )}
             >
               Alphabets
             </Button>
             <Button
               variant={selectedFilters.includes("highest") ? "default" : "outline"}
-              onClick={() => toggleFilter("highest")}
+              onClick={() => setSelectedFilters(prev => 
+                prev.includes("highest") 
+                  ? prev.filter(f => f !== "highest")
+                  : [...prev, "highest"]
+              )}
             >
               Highest Alphabet
             </Button>
           </div>
 
-          <div className="rounded-lg bg-muted p-4">
-            <pre className="whitespace-pre-wrap break-words">
-              {JSON.stringify(getFilteredResponse(), null, 2)}
-            </pre>
-          </div>
+          {selectedFilters.length > 0 && (
+            <div className="rounded-lg bg-muted p-4">
+              <div className="font-medium mb-2">Filtered Response</div>
+              {Object.entries(getFilteredResponse() || {}).map(([key, value]) => (
+                <div key={key} className="mb-1">
+                  {key}: {Array.isArray(value) ? value.join(", ") : value}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
