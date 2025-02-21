@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: bajaj-finserv-challenge
+    env: node
+    buildCommand: chmod +x build.sh && ./build.sh
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
