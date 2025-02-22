@@ -1,8 +1,7 @@
 import { z } from "zod";
 
-// Input validation schema
 export const arrayInputSchema = z.object({
-  data: z.array(z.string())
+  data: z.array(z.string()) // Ensure that "data" is an array of strings
 });
 
 export type ArrayInput = z.infer<typeof arrayInputSchema>;
